@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <style>
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
+      #input, #nickname { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
+      #input:focus { outline: none; }
+      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+      .intro, #username { display:inline;}
+
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages > li { padding: 0.5rem 1rem; }
+      #messages > li:nth-child(odd) { background: #efefef; }
+    </style>
+  </head>
+  <body>
+    <div class="username" id="usernameblock" style="display:none;">
+        <div id="intro">Hello</div>
+        &nbsp;
+        <div id="username"></div>
+    </div>
+    <ul id="messages"></ul>
+    <div id="nickname-block" style="display:none;">
+      <label>Assign nickname:</label>
+      <input id="nickname"/>
+      <button type="button" id="submitNickname">Submit nickname</button>
+    </div>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" /><button>Send</button>
+    </form>
+  </body>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    let socket = io();
+
+    let messages = document.getElementById('messages');
+    let form = document.getElementById('form');
+    let input = document.getElementById('input');
+    let nicknameBtn = document.getElementById("submitNickname");
+    let nicknameblock = document.getElementById("nickname-block");
+    let nickname = document.getElementById("nickname");
+    let usernameblock = document.getElementById("usernameblock");
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (input.value) {
+        if(document.getElementById("username").innerHTML != "") {
+          socket.emit('chat message', { name: document.getElementById("username").innerHTML, message: input.value });
+          input.value = '';
+        }
+        else {
+          nicknameblock.style.display = "block";
+        }
+      }
+    });
+
+    nicknameBtn.addEventListener("click", function(e) {
+      console.log('hello');
+      if(nickname.value === "") {
+          nickname.style.border = "2px solid red";
+      }
+      else {
+        nickname.style.border = "none";
+        document.getElementById("username").innerHTML = document.getElementById("nickname").value;
+        nicknameblock.style.display = "none";
+
+        usernameblock.style.display = "flex";
+      }
+    });
+
+    socket.on('chat message', function(msg) {
+      console.log(msg);
+      let item = document.createElement('li');
+      item.textContent = msg.name + ": " + msg.message;
+      messages.appendChild(item);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+  </script>
+</html>
